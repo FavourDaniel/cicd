@@ -1,0 +1,17 @@
+---
+# This is my first, very own configuration file for yamllint!
+# It extends the default conf by adjusting some options.
+extends: default
+rules:
+    line-length:
+        level: warning
+    empty-lines:
+        level: warning
+    trailing-spaces:
+        level: warning
+    document-start:
+        level: warning
+    new-line-at-end-of-file:
+        level: warning
+
+

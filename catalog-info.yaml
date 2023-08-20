@@ -1,0 +1,27 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: favour-cicd
+  description: favour-cicd
+  namespace: default
+  tags:
+    - argocd
+    - kubernetes
+  links:
+    - url: https://deimosdev.slack.com/
+      title: Project Channel
+      icon: slack  
+    - url: https://deimosdev.slack.com/
+      title: Internal Channel
+      icon: slack
+  annotations:
+  
+    backstage.io/techdocs-ref: url:https://github.com/DeimosCloud/favour-cicd
+    backstage.io/source-location: url:https://github.com/DeimosCloud/favour-cicd
+  
+  
+spec:
+  type: service
+  owner: sre
+  lifecycle: experimental
+    

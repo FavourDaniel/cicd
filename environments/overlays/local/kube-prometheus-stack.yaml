@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    deimos.io/application: observability
+    deimos.io/customer: deimos.io
+    deimos.io/owner: sre@deimos.io
+    deimos.io/project: managed-infrastructure  
+    deimos.io/environment-local: deploy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: deimos.io
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 47.6.1
+    helm:
+      releaseName: kube-prometheus-stack
+      values: |
+        grafana:
+          sidecar:
+            datasources:
+              defaultDatasourceEnabled: false
+        prometheus:
+          prometheusSpec:
+            enableRemoteWriteReceiver: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: -1

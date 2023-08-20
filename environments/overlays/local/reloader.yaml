@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reloader
+  namespace: argocd
+  annotations:
+    deimos.io/application: gitops
+    deimos.io/customer: deimos.io
+    deimos.io/owner: sre@deimos.io
+    deimos.io/project: managed-infrastructure  
+    deimos.io/environment-local: deploy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: deimos.io
+  source:
+    chart: reloader
+    repoURL: https://stakater.github.io/stakater-charts
+    targetRevision: v1.0.26
+    helm:
+      releaseName: reloader
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: reloader
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: -1

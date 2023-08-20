@@ -1,0 +1,35 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentelemetry-operator
+  namespace: argocd
+  annotations:
+    deimos.io/application: observability  
+    deimos.io/customer: deimos.io
+    deimos.io/owner: sre@deimos.io
+    deimos.io/project: managed-infrastructure  
+    deimos.io/environment-local: deploy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: deimos.io
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts 
+    targetRevision: 0.33.0
+    chart: opentelemetry-operator
+    helm:
+      releaseName: opentelemetry-operator
+      values: |
+        manager:
+          featureGates: "+operator.autoinstrumentation.go"    
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: -1

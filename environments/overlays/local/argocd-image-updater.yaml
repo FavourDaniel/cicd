@@ -1,0 +1,53 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+  annotations:
+    deimos.io/application: gitops
+    deimos.io/customer: deimos.io
+    deimos.io/owner: sre@deimos.io
+    deimos.io/project: managed-infrastructure
+    deimos.io/environment-local: deploy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: deimos.io
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 0.9.1
+    chart: argocd-image-updater
+    helm:
+      releaseName: argocd-image-updater
+      values: | 
+        config:  
+          gitCommitUser: argocd@deimos.co.za
+          gitCommitMail: argocd@deimos.co.za
+          logLevel: debug   
+          
+          registries:  
+            - name: Google Artifact Registry
+              api_url: https://europe-west1-docker.pkg.dev
+              prefix: europe-west1-docker.pkg.dev
+              ping: no
+              insecure: no
+              credentials: pullsecret:argocd/gar-image-pull
+              credsexpire: 30m 
+          
+            - name: local
+              api_url: http://registry.kube-system.svc.cluster.local
+              prefix: localhost:5000
+              ping: no
+              insecure: yes
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: -1      

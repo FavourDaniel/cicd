@@ -1,0 +1,4 @@
+opentelemetry-sdk
+opentelemetry-instrumentation-django
+requests
+django

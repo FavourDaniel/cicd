@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    deimos.io/customer: deimos.io
+    deimos.io/owner: sre@deimos.io
+    deimos.io/project: managed-infrastructure
+    deimos.io/environment-local: deploy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: deimos.io
+  source:
+    repoURL: https://charts.jetstack.io 
+    targetRevision: v1.12.1
+    chart: cert-manager
+    helm:
+      releaseName: cert-manager
+      values: |
+        installCRDs: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: -1

@@ -1,0 +1,100 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.234.0/containers/kubernetes-helm-minikube
+{
+	"name": "favour-cicd",
+	"build": {
+		"dockerfile": "Dockerfile",
+		// Update 'VARIANT' to pick an Debian version: bullseye, buster
+		// Use bullseye on local arm64/Apple Silicon.
+		"args": { 
+			"VARIANT": "bullseye",
+			"USERNAME": "vscode"
+		}
+	},	
+	"mounts": [
+		"source=${localWorkspaceFolder}/.devcontainer,target=/commandhistory,type=bind,consistency=cached",
+		"source=${localWorkspaceFolder}/.devcontainer/powershell,target=/home/vscode/.local/share/powershell,type=bind,consistency=cached"
+	],
+	"containerEnv": {
+	
+		"GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+		"GITHUB_EMAIL": "${localEnv:GITHUB_EMAIL}",
+		"GITHUB_USER": "${localEnv:GITHUB_USER}",
+	
+		"WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+		"POSH_THEME": "${containerWorkspaceFolder}/.devcontainer/oh-my-posh/jandedobbeleer.omp.json"
+	},
+	"remoteEnv": {
+	
+		"GITHUB_TOKEN": "${containerEnv:GITHUB_TOKEN}",
+		"GITHUB_EMAIL": "${containerEnv:GITHUB_EMAIL}",
+		"GITHUB_USER": "${containerEnv:GITHUB_USER}"
+	
+	},
+	"customizations": {
+		"vscode": {
+			// Set *default* container specific settings.json values on container create.
+			"settings": {
+				"powershell.powerShellAdditionalExePaths": {
+					"exePath": "/opt/microsoft/powershell/7/pwsh",
+					"versionName": "PowerShell Core 7"
+				},
+				"powershell.powerShellDefaultVersion": "PowerShell Core 7",
+			
+				"cloudcode.autoDependencies": "off",
+			
+			},
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+			
+			
+				"GitHub.vscode-pull-request-github",
+			
+			
+						
+			
+				"googlecloudtools.cloudcode",
+			
+				"ms-azuretools.vscode-docker",
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"ms-vscode.powershell",
+				"GitHub.copilot",
+				"gruntfuggly.todo-tree",
+				"redhat.vscode-yaml"
+			]
+		}
+	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": ".devcontainer/postcreate.sh",
+	// Use 'postStartCommand' to run commands after the container is created like starting minikube.
+	// "postStartCommand": "nohup bash -c 'minikube start &' > minikube.log 2>&1",
+	// Minikube does not like running as root, so use a non-root user.
+	"remoteUser": "vscode",
+	"features": {		
+		"ghcr.io/devcontainers-contrib/features/argo-cd:1": {
+			"version": "latest"
+		},
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest"
+        },		
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+            "version": "latest"
+        },
+		"ghcr.io/rio/features/kustomize:1": 
+		{
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/powershell:1": {
+            "version": "latest"
+        },
+		"ghcr.io/rio/features/skaffold:1": 
+		{
+		},
+							
+	}	
+}

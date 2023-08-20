@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  deimos.io/application: favour-cicd
+  deimos.io/customer: deimos.io
+  deimos.io/owner: sre@deimos.io
+  deimos.io/project: favour-cicd
+  deimos.io/version: 0.0.1
+
+  deimos.io/repo: https://github.com/DeimosCloud/favour-cicd.git
+
+resources: 
+  - deimos.io

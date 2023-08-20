@@ -1,0 +1,21 @@
+site_name: favour-cicd
+
+repo_url: https://github.com/DeimosCloud/favour-cicd
+
+edit_uri: edit/main/docs/
+     
+nav:
+
+theme:
+    name: readthedocs
+    navigation_depth: 2
+    features:
+        - navigation.expand
+
+markdown_extensions:
+    - toc:
+          permalink: True
+          separator: "_"
+
+plugins:
+    - techdocs-core

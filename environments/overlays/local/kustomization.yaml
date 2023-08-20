@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+  - target:
+      annotationSelector: deimos.io/environment-local notin (deploy)
+    patch: |
+      $patch: delete
+      kind: Application
+      metadata:
+        name: DOES NOT MATTER
+resources:
+  - ../base
+  - argocd-image-updater.yaml
+  - cert-manager.yaml
+  - cloudnative-pg.yaml
+  - external-secrets.yaml
+  - jaeger-operator.yaml
+  - kube-prometheus-stack.yaml
+  - loki-stack.yaml
+  - opentelemetry-operator.yaml
+  - reloader.yaml
+
+

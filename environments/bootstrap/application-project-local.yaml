@@ -1,0 +1,100 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    deimos.io/environment-local: deploy
+    deimos.io/environment-development: deploy
+    deimos.io/environment-staging: deploy
+    deimos.io/environment-production: deploy
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  name: favour-cicd
+  namespace: argocd
+stringData:
+  type: git
+
+  url: https://github.com/DeimosCloud/favour-cicd.git
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  annotations:
+    deimos.io/environment-local: deploy
+    deimos.io/environment-development: deploy
+    deimos.io/environment-staging: deploy
+    deimos.io/environment-production: deploy
+  name: favour-cicd-project
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: favour-cicd
+  sourceRepos:
+    - "*"
+  destinations:
+    - namespace: "*"
+      server: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    deimos.io/environment-local: deploy
+    deimos.io/environment-development: deploy
+    deimos.io/environment-staging: deploy
+    deimos.io/environment-production: deploy
+  name: favour-cicd
+  namespace: argocd
+spec:
+  project: favour-cicd-project
+  source:
+  
+    repoURL: https://github.com/DeimosCloud/favour-cicd.git
+  
+    targetRevision: HEAD
+    path: environments/overlays/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+    retry:
+      limit: -1
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    deimos.io/environment-local: deploy
+    deimos.io/environment-development: deploy
+    deimos.io/environment-staging: deploy
+    deimos.io/environment-production: deploy
+  name: favour-cicd-annotations
+  namespace: argocd
+spec:
+  project: favour-cicd-project
+  source:
+  
+    repoURL: https://github.com/DeimosCloud/favour-cicd.git
+    
+    targetRevision: HEAD
+    path: environments/annotations/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+    retry:
+      limit: -1

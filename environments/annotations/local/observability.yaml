@@ -1,0 +1,225 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: observability-default-collector-view
+subjects:
+  - kind: User
+    name: system:serviceaccount:observability:default-collector
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: default
+  namespace: observability
+spec:
+  mode: deployment
+  hostNetwork: true
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            cors:
+              allowed_origins:
+              - http://*
+              - https://*
+            endpoint: 0.0.0.0:4318
+    exporters:
+      loki:
+        endpoint: https://loki-stack.observability.svc.cluster.local:3100/loki/api/v1/push
+      otlp/jaeger:
+          endpoint: allinone-collector.observability.svc.cluster.local:4317
+          tls:
+            insecure: true
+      logging:
+        loglevel: debug    
+      prometheusremotewrite:
+        endpoint: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090/api/v1/write
+        target_info:
+          enabled: true            
+    connectors:
+      spanmetrics:
+        histogram:
+          explicit:
+            buckets: [100us, 1ms, 2ms, 6ms, 10ms, 100ms, 250ms]
+        dimensions:
+          - name: http.method
+            default: GET
+          - name: http.status_code
+        dimensions_cache_size: 1000
+        aggregation_temporality: "AGGREGATION_TEMPORALITY_CUMULATIVE"         
+    processors:
+      k8sattributes:
+      batch:
+        send_batch_max_size: 1000
+        send_batch_size: 100
+        timeout: 10s
+      resourcedetection:
+        detectors: [system, env]
+        timeout: 5s
+        override: false
+      metricstransform/insert:
+        transforms:
+          - include: calls
+            match_type: strict
+            action: update
+            new_name: calls_total
+            operations:
+            - action: update_label
+              label: span.name
+              new_label: operation
+          - include: duration
+            match_type: strict
+            action: update
+            new_name: latency
+            operations:
+              - action: update_label
+                label: span.name
+                new_label: operation        
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [resourcedetection, k8sattributes]
+          exporters: [spanmetrics, otlp/jaeger]
+        metrics:
+          receivers: [spanmetrics, otlp]
+          processors: [resourcedetection, k8sattributes, metricstransform/insert]
+          exporters: [prometheusremotewrite]
+        logs:
+          receivers: [otlp]
+          processors: [resourcedetection, k8sattributes]
+          exporters: [logging, loki]
+      telemetry:
+        logs:
+          level: debug
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+  replicas: 1
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: instrumentation
+  namespace: observability
+spec:
+  dotnet:
+    env:
+      - name: OTEL_DOTNET_AUTO_DEBUG
+        value: "true"
+      - name: OTEL_DOTNET_AUTO_LOGS_INCLUDE_FORMATTED_MESSAGE
+        value: "true"
+  exporter:
+    endpoint: http://default-collector.observability.svc.cluster.local:4318
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+  sampler:
+    type: parentbased_always_on
+    argument: "0.25"
+---
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: allinone
+  namespace: observability
+spec:
+  strategy: allInOne
+  allInOne:
+    image: jaegertracing/all-in-one:latest
+    options:
+      log-level: debug
+      query:
+        base-path: /jaeger
+    metricsStorage:
+      type: prometheus
+  storage:
+    options:
+      memory:
+        max-traces: 100000
+    secretName: jaeger-prometheus
+  ui:
+    options:
+      monitor:
+        menuEnabled: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jaeger-prometheus
+  namespace: observability
+type: Opaque
+stringData:
+  PROMETHEUS_SERVER_URL: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    grafana_datasource: "1"
+  name: kube-prometheus-stack-grafana-datasources-jaeger
+  namespace: observability
+type: Opaque
+stringData:
+  jaeger-datasource.yaml: |-
+    apiVersion: 1
+    datasources: 
+      - name: Jaeger
+        type: jaeger
+        typeName: Jaeger
+        typeLogoUrl: public/app/plugins/datasource/jaeger/img/jaeger_logo.svg
+        access: proxy
+        url: http://allinone-query.observability.svc.cluster.local:16686/jaeger
+        basicAuth: false
+        isDefault: false
+        jsonData: {"spanBar":{"type":"None"}}
+        readOnly: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    grafana_datasource: "1"
+  name: kube-prometheus-stack-grafana-datasource-loki
+  namespace: observability
+type: Opaque
+stringData:
+  loki-datasource.yaml: |-
+    apiVersion: 1
+    datasources: 
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki-stack.observability.svc.cluster.local:3100
+        basicAuth: false
+        isDefault: false
+        readOnly: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    grafana_datasource: "1"
+  name: kube-prometheus-stack-grafana-datasources-prometheus
+  namespace: observability
+type: Opaque
+stringData:
+  prometheus-datasource.yaml: |-
+    apiVersion: 1
+    datasources: 
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090
+        basicAuth: false
+        isDefault: false
+        readOnly: false
