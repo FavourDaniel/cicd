@@ -44,13 +44,13 @@ done
 # to use impersonation, set the argument Impersonate to the name of the service account you would like to impersonate 
 # pwsh scripts/retrieve-secrets.ps1 -Project $project -Secret 'favour-cicd-local' -Impersonate 'terraform-reader'
 
-pwsh scripts/retrieve-secrets.ps1 -Project $project -Secret 'favour-cicd-local'
+# pwsh scripts/retrieve-secrets.ps1 -Project $project -Secret 'favour-cicd-local'
 
-source /tmp/secrets.sh
+# source /tmp/secrets.sh
 
-# Add secrets
+# # Add secrets
 
-requireds+=("GSA_KEY")
+# requireds+=("GSA_KEY")
 
 # Destroy minikube
 
@@ -112,8 +112,8 @@ kubectl create ns $profile
 
 # artifact registry pull secret
 
-kubectl create secret docker-registry gar-image-pull --docker-server=europe-west1-docker.pkg.dev --docker-username=_json_key --docker-password="$(echo $GSA_KEY | base64 --decode)" --docker-email=noreply@invalid.tld -n $profile 
-kubectl create secret docker-registry gar-image-pull --docker-server=europe-west1-docker.pkg.dev --docker-username=_json_key --docker-password="$(echo $GSA_KEY | base64 --decode)" --docker-email=noreply@invalid.tld -n argocd  
+# kubectl create secret docker-registry gar-image-pull --docker-server=europe-west1-docker.pkg.dev --docker-username=_json_key --docker-password="$(echo $GSA_KEY | base64 --decode)" --docker-email=noreply@invalid.tld -n $profile 
+# kubectl create secret docker-registry gar-image-pull --docker-server=europe-west1-docker.pkg.dev --docker-username=_json_key --docker-password="$(echo $GSA_KEY | base64 --decode)" --docker-email=noreply@invalid.tld -n argocd  
 
 minikube tunnel --cleanup --profile $profile &
 
