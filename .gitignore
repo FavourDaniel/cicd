@@ -56,3 +56,5 @@ secrets.sh
 
 *.ovpn
 *.lock
+
+.DS_Store
