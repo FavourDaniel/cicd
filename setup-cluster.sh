@@ -58,7 +58,7 @@ minikube delete -p $profile
 
 # Start minikube
 
-minikube start --profile $profile  --memory=8192 --cpus=4
+minikube start --profile $profile  --memory=4096 --cpus=4
 
 # minikube addons
 

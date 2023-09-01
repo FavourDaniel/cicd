@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    # Only deploy this to the local environment
+    deimos.io/environment-local: deploy
+  name: node-web-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # The ArgoCD project that this application is part of.
+  project: favour-cicd
+  source:
+    # The Repo where this file is stored.
+    repoURL: https://github.com/DeimosCloud/myapp.git
+    # The helm chart that will deploy this application.
+    path: charts/generic
+    # The branch, HEAD is the default branch which is main
+    targetRevision: HEAD
+    helm:
+      releaseName: node-web-app
+      values: |
+        fullnameOverride: node-web-app
+        image:
+          # The container registry where the container is located.
+          repository: localhost:5000/node-web-app
+          # The container image tag
+          tag: 0.0.1
+        livenessProbe: {}      
+        readinessProbe: {}
+        service:
+          port: 8081
+  destination:
+    server: https://kubernetes.default.svc
+    # The namespace where this application will be deployed
+    namespace: myapp
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: -1
